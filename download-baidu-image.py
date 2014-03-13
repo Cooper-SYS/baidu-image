@@ -144,6 +144,8 @@ class DownloadFrame(wx.Frame):
         self.statusBar=wx.StatusBar(self);
         self.statusBar.SetStatusText('欢迎使用百度图片下载器'.decode('utf8'))
         self.SetStatusBar(self.statusBar)
+        self.starttime=time.time()
+        self.num=0
         self.tag1=[] 
         self.tag2=[]
         self.tag3=[]
