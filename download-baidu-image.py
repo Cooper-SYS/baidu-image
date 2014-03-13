@@ -426,7 +426,6 @@ class DownloadFrame(wx.Frame):
         self.thread.stop()
     #关闭窗口    
     def OnCloseWindow(self,event):
-        self.Stop(event)
         self.DestroyChildren()
         event.Skip()
             
