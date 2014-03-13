@@ -117,13 +117,16 @@ class WorkerThread(threading.Thread):
                         img = wx.Image(filename, wx.BITMAP_TYPE_ANY)
                         w = img.GetWidth()
                         h = img.GetHeight()
-                        if h/w>1.5:
-                            img2=img.Scale(w/h*235,235)
+                        if w/h>1.05:
+                            img2=img.Scale(420,420*h/w)
                         else:
-                            img2=img.Scale(150,h/w*150)
-                        self.window.myImage.SetBitmap(wx.Image('bitmaps\\default.jpg', wx.BITMAP_TYPE_ANY).ConvertToBitmap()) 
-                        self.window.myImage.SetBitmap(img2.ConvertToBitmap()) 
-                        self.window.statusBar.SetStatusText('%s  第%s页  总第%s张 下载成功'.decode('utf8') % (tag,i,j) )
+                            img2=img.Scale(400*w/h,400)
+                        try:
+                            self.window.myImage.SetBitmap(wx.Image('bitmaps\\default.jpg', wx.BITMAP_TYPE_ANY).ConvertToBitmap()) 
+                            self.window.myImage.SetBitmap(img2.ConvertToBitmap()) 
+                            self.window.statusBar.SetStatusText('%s  第%s页  总第%s张 下载成功'.decode('utf8') % (tag,i,j) )
+                        except wx.PyDeadObjectError as e:
+                            self.stop()
                         j +=1
             else:
                 break
@@ -137,7 +140,7 @@ class DownloadWindow(wx.Window):
 class DownloadFrame(wx.Frame):
     def __init__(self, parent):
         self.threads = []
-        wx.Frame.__init__(self, parent, -1, "百度图片下载器".decode('utf8'),style=wx.MINIMIZE_BOX | wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX,size=(455,400))
+        wx.Frame.__init__(self, parent, -1, "百度图片下载器".decode('utf8'),style=wx.MINIMIZE_BOX | wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX,size=(800,450))
         self.icon = wx.Icon('bitmaps\\download.ico', wx.BITMAP_TYPE_ICO)
         self.SetIcon(self.icon)  
         self.font = wx.Font(20, wx.SWISS,wx.NORMAL,wx.NORMAL)
@@ -145,6 +148,7 @@ class DownloadFrame(wx.Frame):
         self.statusBar.SetStatusText('欢迎使用百度图片下载器'.decode('utf8'))
         self.SetStatusBar(self.statusBar)
         self.starttime=time.time()
+        self.Bind(wx.EVT_CLOSE,self.OnCloseWindow)
         self.num=0
         self.tag1=[] 
         self.tag2=[]
@@ -307,13 +311,8 @@ class DownloadFrame(wx.Frame):
         boxLeft.Add(self.choice2,flag=wx.EXPAND | wx.ALL,border=10)
         
         img = wx.Image("bitmaps\\default.jpg", wx.BITMAP_TYPE_ANY)
-        w = img.GetWidth()
-        h = img.GetHeight()
-        if h/w>1.5:
-            img2=img.Scale(w/h*235,235)
-        else:
-            img2=img.Scale(150,h/w*150)
-        #img2=img.Scale(150,235)
+        
+        img2=img.Scale(420,400)
         self.myImage = wx.StaticBitmap(panel, -1,wx.BitmapFromImage(img2))
         boxLeft.Add(self.myImage,flag=wx.EXPAND | wx.ALL,border=10)
         
@@ -322,7 +321,7 @@ class DownloadFrame(wx.Frame):
         boxCenter=wx.BoxSizer(wx.VERTICAL)
         
         choice3List = [''] 
-        self.choice3 = wx.ListBox(panel, -1, (0, 0), (120, 320), choice3List,wx.LB_MULTIPLE)  
+        self.choice3 = wx.ListBox(panel, -1, (0, 0), (120, 390), choice3List,wx.LB_MULTIPLE)  
         boxCenter.Add(self.choice3,flag=wx.EXPAND | wx.ALL,border=10)
         
         box.Add(boxCenter)
@@ -421,13 +420,15 @@ class DownloadFrame(wx.Frame):
         self.btnStop.Enable(False)
         taketime=int(self.endtime-self.starttime)
         self.statusBar.SetStatusText('欢迎使用百度图片下载器，刚才的总共花费时间 %s 秒，共下载%s张'.decode('utf8') % (str(taketime),str(self.num-1)))
+            
     #点击stop    
     def Stop(self,event):
         self.thread.stop()
     #关闭窗口    
     def OnCloseWindow(self,event):
-        self.ThreadFinished()
-        self.Destroy()
+        self.Stop(event)
+        self.DestroyChildren()
+        event.Skip()
             
 class MainApp(wx.App):
     def OnInit(self):
